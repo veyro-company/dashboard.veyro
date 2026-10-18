@@ -68,9 +68,7 @@ async function ensureIdentity(session) {
   const select = document.querySelector("#cloud-person");
   loginForm.hidden = true;
   identityForm.hidden = false;
-  const used = new Set(Object.values(getDB().accountMap || {}));
-  const available = getDB().team.filter((person) => !used.has(person.id));
-  select.innerHTML = (available.length ? available : getDB().team)
+  select.innerHTML = getDB().team
     .map((person) => `<option value="${person.id}">${person.name}</option>`)
     .join("");
   showLogin(true);
