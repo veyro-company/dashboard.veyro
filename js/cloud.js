@@ -54,6 +54,7 @@ function mappedPerson() {
 function updateIdentityLabel(email) {
   const person = mappedPerson();
   window.VEYRO_CURRENT_OWNER_ID = person?.id || "";
+  window.VEYRO_CURRENT_USER_EMAIL = email;
   const label = document.querySelector("#cloud-user");
   if (label) label.textContent = person ? `${person.name} · ${email}` : email;
 }
@@ -171,6 +172,7 @@ export async function initializeCloud() {
     await client.auth.signOut();
     userId = "";
     window.VEYRO_CURRENT_OWNER_ID = "";
+    window.VEYRO_CURRENT_USER_EMAIL = "";
     revision = -1;
     const label = document.querySelector("#cloud-user");
     if (label) label.textContent = "";

@@ -464,7 +464,15 @@ function ideasView() {
 }
 function settingsView() {
   const d = getDB(),
-    p = d.profile;
+    currentPerson = d.team.find(
+      (person) => person.id === window.VEYRO_CURRENT_OWNER_ID,
+    ),
+    p = {
+      ...d.profile,
+      name: currentPerson?.name || d.profile.name,
+      email:
+        window.VEYRO_CURRENT_USER_EMAIL || currentPerson?.email || "",
+    };
   return `<div class="settings-layout"><form id="settings-form"><section class="panel settings-panel"><h2>Twoja przestrzeń</h2><div class="form-grid">${field("Twoje imię *", "name", p.name, "text", 'required maxlength="80"') + field("Nazwa firmy *", "company", p.company, "text", 'required maxlength="40"') + field("Adres e-mail", "email", p.email, "email", 'maxlength="180"', true)}</div></section><section class="panel settings-panel"><h2>Mały zespół. Duże możliwości.</h2><div class="form-grid">${d.team.map((u, i) => field("Osoba " + (i + 1) + " *", "team-" + u.id, u.name, "text", 'required maxlength="80"')).join("")}</div><p class="settings-notice">Osoby służą do przypisywania pracy. Dane są lokalne — nie ma tu logowania ani synchronizacji pomiędzy komputerami.</p></section><section class="panel settings-panel" id="goal-settings"><h2>Wasze cele</h2><div class="form-grid">${field("Wiadomości w tygodniu *", "weeklyGoal", p.weeklyGoal, "number", 'required min="1" max="100000" step="1"') + field("Cel przychodu (zł) *", "revenueGoal", p.revenueGoal, "number", 'required min="1" max="999999999" step="1"') + field("Cel pozyskanych klientów *", "clientGoal", p.clientGoal, "number", 'required min="1" max="100000" step="1"')}</div></section><section class="panel settings-panel"><h2>Tak, jak lubisz</h2><div style="display:grid;gap:16px"><label class="check-field"><input type="checkbox" name="compact" ${p.compact ? "checked" : ""}>Bardziej zwarty widok</label><label class="check-field"><input type="checkbox" name="reduceMotion" ${p.reduceMotion ? "checked" : ""}>Ogranicz animacje</label><label class="check-field"><input type="checkbox" name="reminders" ${p.reminders ? "checked" : ""}>Przypomnienia wewnątrz aplikacji</label></div><p class="settings-notice">Ustawienie systemowe ograniczenia animacji jest zawsze respektowane. Przypomnienia działają podczas otwarcia aplikacji.</p></section><button class="button primary" type="submit">${icon("check")}Zapisz ustawienia</button></form><div style="display:grid;gap:20px"><section class="panel settings-panel"><h2>Bezpieczna kopia pod ręką</h2><p class="settings-notice">Dane są przechowywane w tej przeglądarce. Eksportuj kopię, aby przenieść je na inny komputer lub zabezpieczyć przed wyczyszczeniem pamięci.</p><div class="backup-actions"><button class="button" data-action="export">${icon("download")}Eksportuj dane JSON</button><button class="button" data-action="import">${icon("upload")}Importuj kopię JSON</button></div><p class="settings-notice">Import zastępuje bieżące dane po sprawdzeniu pliku i Twoim potwierdzeniu.</p></section><section class="panel settings-panel"><h2>Nowy początek</h2><p class="settings-notice">Przestrzeń startuje z przykładowymi klientami i zadaniami. Usuń je, gdy zechcesz pracować na własnych danych.</p><div class="backup-actions"><button class="button danger" data-action="clear-data">Wyczyść dane aplikacji</button><button class="button" data-action="demo-data">Wczytaj dane przykładowe</button></div></section><section class="panel settings-panel"><h2>Historia zespołu</h2><p class="settings-notice">Zobacz zapisane zmiany, kontakty i wykonane zadania.</p><button class="button" data-page="activity">${icon("activity")}Zobacz aktywności</button></section></div></div>`;
 }
 function activityView() {
@@ -1007,8 +1015,7 @@ document.addEventListener("submit", (e) => {
       if (!String(fd.get("name")).trim() || !String(fd.get("company")).trim())
         throw Error("Nazwa i imię nie mogą być puste.");
       transact((d) => {
-        for (const key of ["name", "company", "email"])
-          d.profile[key] = String(fd.get(key)).trim();
+        d.profile.company = String(fd.get("company")).trim();
         for (const key of ["weeklyGoal", "revenueGoal", "clientGoal"]) {
           const n = Number(fd.get(key));
           if (!Number.isFinite(n) || n < 1)
@@ -1022,6 +1029,19 @@ document.addEventListener("submit", (e) => {
           if (!name) throw Error("Wpisz imiona członków zespołu.");
           u.name = name;
           u.initials = name
+            .split(/\s+/)
+            .map((x) => x[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
+        }
+        const currentPerson = d.team.find(
+          (person) => person.id === window.VEYRO_CURRENT_OWNER_ID,
+        );
+        if (currentPerson) {
+          currentPerson.name = String(fd.get("name")).trim();
+          currentPerson.email = String(fd.get("email")).trim();
+          currentPerson.initials = currentPerson.name
             .split(/\s+/)
             .map((x) => x[0])
             .slice(0, 2)
