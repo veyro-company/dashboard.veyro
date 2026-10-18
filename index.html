@@ -15,6 +15,17 @@
     <link rel="stylesheet" href="css/animations.css" />
   </head>
   <body>
+    <section class="cloud-login" id="cloud-login" aria-labelledby="cloud-login-title">
+      <form class="cloud-login-card" id="cloud-login-form">
+        <div class="cloud-login-brand">VEYRO</div>
+        <h1 id="cloud-login-title">Zaloguj się do przestrzeni</h1>
+        <p>Klienci, zadania i kalendarz będą wspólne dla Waszego zespołu.</p>
+        <label>E-mail<input type="email" name="email" autocomplete="email" required /></label>
+        <label>Hasło<input type="password" name="password" autocomplete="current-password" minlength="6" required /></label>
+        <div class="form-error" id="cloud-login-error" role="alert"></div>
+        <button class="button primary" type="submit">Zaloguj się</button>
+      </form>
+    </section>
     <a href="#content" class="skip-link">Przejdź do treści</a>
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#dashboard" aria-label="VEYRO — pulpit">VEYRO</a>
@@ -67,13 +78,14 @@
       <div id="content" tabindex="-1"></div>
       <footer>
         VEYRO <span>Małe kroki. Wielkie możliwości.</span
-        ><span id="save-state">Zapis lokalny</span>
+        ><span id="save-state">Łączenie z bazą…</span>
       </footer>
     </main>
     <dialog id="modal" aria-labelledby="modal-title">
       <div id="modal-content"></div>
     </dialog>
     <div id="toasts" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/app.js"></script>
   </body>
 </html>

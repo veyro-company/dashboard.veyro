@@ -222,7 +222,8 @@ function seed() {
   };
 }
 let db,
-  storageProblem = "";
+  storageProblem = "",
+  cloudPersistHandler = null;
 try {
   const saved = localStorage.getItem(KEY);
   db = saved ? validate(JSON.parse(saved)) : seed();
@@ -243,12 +244,23 @@ export function persist(next = db) {
     localStorage.setItem(KEY, JSON.stringify(next));
     db = next;
     document.dispatchEvent(new CustomEvent("veyro:updated"));
+    if (cloudPersistHandler) cloudPersistHandler(copy(next));
     return true;
   } catch (e) {
     throw new Error(
       "Brak miejsca lub dostępu do pamięci przeglądarki. Wyeksportuj dane i zwolnij miejsce.",
     );
   }
+}
+export function setCloudPersistHandler(handler) {
+  cloudPersistHandler = typeof handler === "function" ? handler : null;
+}
+export function replaceFromCloud(data) {
+  const next = validate(data);
+  localStorage.setItem(KEY, JSON.stringify(next));
+  db = next;
+  document.dispatchEvent(new CustomEvent("veyro:cloud-loaded"));
+  return next;
 }
 export function transact(fn) {
   const next = copy(db);

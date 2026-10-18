@@ -31,6 +31,7 @@ import {
   resetData,
   storageWarning,
 } from "./storage.js";
+import { initializeCloud } from "./cloud.js";
 import { dashboard } from "./dashboard.js";
 import { clients, clientView } from "./clients.js";
 import { tasks, taskView } from "./tasks.js";
@@ -1122,6 +1123,17 @@ setInterval(checkReminders, 30000);
 navigate(location.hash.slice(1));
 checkReminders();
 if (storageWarning()) toast(storageWarning(), true);
+document.addEventListener("veyro:cloud-loaded", () => {
+  render();
+  toast("Wczytano wspólne dane zespołu.");
+});
+document.addEventListener("veyro:cloud-status", (event) => {
+  const state = event.detail || {};
+  const label = $("#save-state");
+  if (label && state.message) label.textContent = state.message;
+  if (state.error) toast(state.error, true);
+});
+initializeCloud();
 
 // Skrót do treści nie zmienia aktywnej sekcji aplikacji.
 $(".skip-link").addEventListener("click", (event) => {
