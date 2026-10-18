@@ -127,7 +127,7 @@ function render({ animate = true } = {}) {
   const p = pages[currentPage] || pages.dashboard;
   document.title = `${getDB().profile.company} — ${p[0]}`;
   $("#navigation").innerHTML = Object.entries(pages)
-    .filter(([key]) => !["settings", "activity"].includes(key))
+    .filter(([key]) => key !== "activity")
     .map(
       ([key, [label, ico]]) =>
         `<a href="#${key}" class="nav-item ${key === currentPage ? "active" : ""}" ${key === currentPage ? 'aria-current="page"' : ""}>${icon(ico)}${label}</a>`,
@@ -232,7 +232,7 @@ function formWrap(kind, id, body) {
 function clientForm(id = "") {
   const d = getDB(),
     c = d.clients.find((x) => x.id === id) || {
-      ownerId: d.team[0].id,
+      ownerId: window.VEYRO_CURRENT_OWNER_ID || d.team[0].id,
       status: "found",
       nextContact: dayISO(),
       value: 0,
@@ -304,7 +304,7 @@ function taskForm(id = "", preset = {}) {
       priority: "normal",
       due: dayISO(),
       time: "",
-      ownerId: d.team[0].id,
+      ownerId: window.VEYRO_CURRENT_OWNER_ID || d.team[0].id,
       checklist: [],
       ...preset,
     };
@@ -355,7 +355,7 @@ function eventForm(id = "", preset = {}) {
       endTime: "11:00",
       type: "meeting",
       reminder: 15,
-      ownerId: d.team[0].id,
+      ownerId: window.VEYRO_CURRENT_OWNER_ID || d.team[0].id,
       ...preset,
     };
   const body =

@@ -566,6 +566,9 @@ dialog {
   background: #f9f8f3;
   box-shadow: 0 25px 100px #181c191c;
 }
+.cloud-login-card[hidden] {
+  display: none;
+}
 .cloud-login-brand {
   font: 800 34px/1 var(--heading);
   letter-spacing: -2px;
@@ -584,6 +587,13 @@ dialog {
   font-weight: 700;
 }
 .cloud-login-card input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #dcd9d1;
+  border-radius: 13px;
+  background: white;
+}
+.cloud-login-card select {
   width: 100%;
   padding: 13px 14px;
   border: 1px solid #dcd9d1;

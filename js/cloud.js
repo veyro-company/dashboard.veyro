@@ -45,6 +45,51 @@ async function loadCloudState() {
   status("Zapisano w chmurze");
 }
 
+function mappedPerson() {
+  const data = getDB();
+  const personId = data.accountMap?.[userId];
+  return data.team.find((person) => person.id === personId) || null;
+}
+
+function updateIdentityLabel(email) {
+  const person = mappedPerson();
+  window.VEYRO_CURRENT_OWNER_ID = person?.id || "";
+  const label = document.querySelector("#cloud-user");
+  if (label) label.textContent = person ? `${person.name} · ${email}` : email;
+}
+
+async function ensureIdentity(session) {
+  if (mappedPerson()) {
+    updateIdentityLabel(session.user.email || "");
+    return;
+  }
+  const loginForm = document.querySelector("#cloud-login-form");
+  const identityForm = document.querySelector("#cloud-identity-form");
+  const select = document.querySelector("#cloud-person");
+  loginForm.hidden = true;
+  identityForm.hidden = false;
+  const used = new Set(Object.values(getDB().accountMap || {}));
+  const available = getDB().team.filter((person) => !used.has(person.id));
+  select.innerHTML = (available.length ? available : getDB().team)
+    .map((person) => `<option value="${person.id}">${person.name}</option>`)
+    .join("");
+  showLogin(true);
+  await new Promise((resolve) => {
+    identityForm.onsubmit = (event) => {
+      event.preventDefault();
+      const personId = String(new FormData(identityForm).get("person") || "");
+      const next = structuredClone(getDB());
+      next.accountMap = { ...(next.accountMap || {}), [userId]: personId };
+      replaceFromCloud(next);
+      queueSave(next);
+      identityForm.hidden = true;
+      loginForm.hidden = false;
+      updateIdentityLabel(session.user.email || "");
+      resolve();
+    };
+  });
+}
+
 async function saveNow(next) {
   const expected = revision;
   status("Zapisywanie…");
@@ -99,11 +144,12 @@ function subscribe() {
 
 async function startSession(session) {
   userId = session.user.id;
-  showLogin(false);
   const logout = document.querySelector("#cloud-logout");
   if (logout) logout.hidden = false;
   setCloudPersistHandler(queueSave);
   await loadCloudState();
+  await ensureIdentity(session);
+  showLogin(false);
   subscribe();
 }
 
@@ -126,7 +172,10 @@ export async function initializeCloud() {
     await client.removeAllChannels();
     await client.auth.signOut();
     userId = "";
+    window.VEYRO_CURRENT_OWNER_ID = "";
     revision = -1;
+    const label = document.querySelector("#cloud-user");
+    if (label) label.textContent = "";
     document.querySelector("#cloud-logout").hidden = true;
     form?.reset();
     showLogin(true);
