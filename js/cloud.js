@@ -8,6 +8,10 @@ const SUPABASE_URL = "https://wdqqnkwzlhtjpenxjkon.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable__OAtcTA4MzVjrQJdmu36fw_L4hHq-Su";
 const ROW_ID = "main";
+const EMAIL_PERSON = {
+  "tiwanicki497@gmail.com": "Tomek",
+  "ifrantsevich2009@gmail.com": "Ivan",
+};
 
 let client;
 let revision = -1;
@@ -60,8 +64,28 @@ function updateIdentityLabel(email) {
 }
 
 async function ensureIdentity(session) {
+  const email = String(session.user.email || "").trim().toLowerCase();
+  const assignedName = EMAIL_PERSON[email];
+  const assignedPerson = assignedName
+    ? getDB().team.find(
+        (person) => person.name.trim().toLowerCase() === assignedName.toLowerCase(),
+      ) || getDB().team.find((person) => person.id === (assignedName === "Tomek" ? "u1" : "u2"))
+    : null;
+  if (assignedPerson) {
+    if (getDB().accountMap?.[userId] !== assignedPerson.id) {
+      const next = structuredClone(getDB());
+      next.accountMap = {
+        ...(next.accountMap || {}),
+        [userId]: assignedPerson.id,
+      };
+      replaceFromCloud(next);
+      queueSave(next);
+    }
+    updateIdentityLabel(email);
+    return;
+  }
   if (mappedPerson()) {
-    updateIdentityLabel(session.user.email || "");
+    updateIdentityLabel(email);
     return;
   }
   const loginForm = document.querySelector("#cloud-login-form");
@@ -83,7 +107,7 @@ async function ensureIdentity(session) {
       queueSave(next);
       identityForm.hidden = true;
       loginForm.hidden = false;
-      updateIdentityLabel(session.user.email || "");
+      updateIdentityLabel(email);
       resolve();
     };
   });
