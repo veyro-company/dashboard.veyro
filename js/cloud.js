@@ -100,6 +100,8 @@ function subscribe() {
 async function startSession(session) {
   userId = session.user.id;
   showLogin(false);
+  const logout = document.querySelector("#cloud-logout");
+  if (logout) logout.hidden = false;
   setCloudPersistHandler(queueSave);
   await loadCloudState();
   subscribe();
@@ -114,6 +116,21 @@ export async function initializeCloud() {
   }
   client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  });
+
+  document.querySelector("#cloud-logout")?.addEventListener("click", async () => {
+    active = false;
+    clearTimeout(timer);
+    queued = null;
+    setCloudPersistHandler(null);
+    await client.removeAllChannels();
+    await client.auth.signOut();
+    userId = "";
+    revision = -1;
+    document.querySelector("#cloud-logout").hidden = true;
+    form?.reset();
+    showLogin(true);
+    status("Wylogowano");
   });
 
   form?.addEventListener("submit", async (event) => {
